@@ -1,0 +1,73 @@
+# Julius Code - API Tokens Configuration
+# Copy this file to TOKENS and fill in your API keys.
+# The TOKENS file is listed in .gitignore and will never be committed.
+
+# ─── Mistral AI ───────────────────────────────────────────────────────────────
+# Get your key at: https://console.mistral.ai/api-keys/
+# curl https://api.mistral.ai/v1/models -X GET -H "Authorization: Bearer SEU_API_KEY"
+MISTRAL_API_KEY=your_mistral_api_key_here
+# Optional: override default model (default: mistral-large-latest)
+# MISTRAL_MODEL=mistral-large-latest
+
+# ─── Anthropic Claude ─────────────────────────────────────────────────────────
+# Get your key at: https://console.anthropic.com/
+# curl https://api.anthropic.com/v1/models -X GET -H "x-api-key: $ANTHROPIC_API_KEY" -H "anthropic-version: 2023-06-06"
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+# Optional: override default model (default: claude-3-5-sonnet-20241022)
+# CLAUDE_MODEL=claude-3-5-sonnet-20241022
+
+# ─── Perplexity ───────────────────────────────────────────────────────────────
+# Get your key at: https://www.perplexity.ai/settings/api
+# https://docs.perplexity.ai/docs/agent-api/models
+PERPLEXITY_API_KEY=your_perplexity_api_key_here
+# Optional: override default model (default: llama-3.1-sonar-large-128k-online)
+# PERPLEXITY_MODEL=llama-3.1-sonar-large-128k-online
+
+# ─── Grok (xAI) ───────────────────────────────────────────────────────────────
+# Get your key at: https://x.ai/api
+# curl https://api.x.ai/v1/models -X GET -H "Authorization: Bearer $GROK_API_KEY"
+GROK_API_KEY=your_grok_api_key_here
+# Optional: override default model (default: grok-beta)
+# GROK_MODEL=grok-beta
+
+# ─── LM Studio (local) ────────────────────────────────────────────────────────
+# Start LM Studio server before using. Default URL: http://localhost:1234
+LMSTUDIO_URL=http://localhost:1234
+# Optional: specify the loaded model name
+# LMSTUDIO_MODEL=local-model
+
+# ─── Ollama (local) ───────────────────────────────────────────────────────────
+# Install Ollama and run `ollama serve`. Default URL: http://localhost:11434
+OLLAMA_URL=http://localhost:11434
+# Optional: specify model (default: llama3.2)
+# OLLAMA_MODEL=llama3.2
+
+# ─── Default Provider ─────────────────────────────────────────────────────────
+# Set the default provider to use when multiple are configured.
+# Options: claude, mistral, perplexity, grok, lmstudio, ollama, github, azureaifoundry, alibabacloud
+# DEFAULT_PROVIDER=claude
+
+# ─── GitHub Models ─────────────────────────────────────────────────
+# Get your token at: https://github.com/settings/tokens
+# Catalog of available models: https://models.github.ai/catalog/models
+GITHUB_TOKEN=your_github_token_here
+# Optional: override default model (default: openai/gpt-4o-mini)
+# GITHUB_MODEL=gpt-4o-mini
+
+# ─── Azure AI Foundry ─────────────────────────────────────────────────────────
+# Create a project at: https://ai.azure.com/
+# Use the OpenAI-compatible endpoint from your AI Foundry resource's "Overview"
+# page (ends in /openai/v1/), and the corresponding API key.
+AZURE_AI_FOUNDRY_ENDPOINT=https://your-resource.services.ai.azure.com/openai/v1/
+AZURE_AI_FOUNDRY_API_KEY=your_azure_ai_foundry_api_key_here
+# Optional: override default model (default: gpt-4o)
+# AZURE_AI_FOUNDRY_MODEL=gpt-4o
+# Optional: override API version (default: 2024-12-01-preview)
+# AZURE_AI_FOUNDRY_API_VERSION=2024-12-01-preview
+
+# ─── Alibaba Cloud (DashScope) ────────────────────────────────────────────────
+# Get your API key at: https://bailian.console.alibabacloud.com/
+# Uses the Singapore endpoint: https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+DASHSCOPE_API_KEY=your_dashscope_api_key_here
+# Optional: override default model (default: qwen-max)
+# ALIBABA_CLOUD_MODEL=qwen-max
