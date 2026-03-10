@@ -23,7 +23,7 @@ def _parse_models_from_md(md_path: Path) -> list[str]:
     except OSError as exc:
         raise OSError(
             f"Could not read GitHub Models parameter file '{md_path}': {exc}. "
-            "Ensure the file exists inside the julius_code/providers/ package directory."
+            "Ensure the file exists inside the julius_tex/providers/ package directory."
         ) from exc
 
     models: list[str] = []

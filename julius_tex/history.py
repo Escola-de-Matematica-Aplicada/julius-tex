@@ -36,7 +36,7 @@ def save_conversation_turn(
     filepath = directory / filename
 
     content = (
-        f"# Julius Code — Chat Session\n\n"
+        f"# Julius Tex — Chat Session\n\n"
         f"**Date**: {dt.strftime('%Y-%m-%d %H:%M:%S')}  \n"
         f"**Provider**: {provider_name}  \n"
         f"**Model**: {model_name}\n\n"

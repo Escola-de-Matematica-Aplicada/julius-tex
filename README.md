@@ -1,8 +1,8 @@
-# Julius Code 🤖
+# Julius Tex 🤖
 
 > Interactive AI research assistant and LaTeX editor — right in your terminal.
 
-Julius Code reads your project's text files (`.tex`, `.bst`, `.cls`, `.bib`, `.md`),
+Julius Tex reads your project's text files (`.tex`, `.bst`, `.cls`, `.bib`, `.md`),
 a custom system prompt, and your API tokens, then starts an intelligent conversation
 about your work.  Every question-and-answer pair is automatically saved as a
 timestamped Markdown file and re-loaded the next time you run the tool, so the
@@ -26,8 +26,8 @@ assistant always has full context of previous sessions.
 You need python, pip and venv.
 ```bash
 # 1 – Clone and install
-git clone https://github.com/Escola-de-Matematica-Aplicada/julius-code.git
-cd julius-code
+git clone https://github.com/Escola-de-Matematica-Aplicada/julius-tex.git
+cd julius-tex
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e .
@@ -50,10 +50,10 @@ $EDITOR PROMPT.sys
 Navigate to any project directory and run:
 
 ```bash
-julius-code
+julius-tex
 ```
 
-Julius Code will:
+Julius Tex will:
 1. Read all `.tex`, `.bst`, `.cls`, `.bib`, and `.md` files in the current directory and its sub-directories as project context.
 2. Read `PROMPT.sys` as the session system prompt (if present).
 3. Read `TOKENS` for API keys (if present).
@@ -65,7 +65,7 @@ Julius Code will:
 | Command | Description |
 |---|---|
 | `/help` | Show all available commands |
-| `/quit` or `/exit` | Exit Julius Code |
+| `/quit` or `/exit` | Exit Julius Tex |
 | `/clear` | Clear current session's message history |
 | `/provider` | Show the active provider and model |
 | `/providers` | List all configured providers and switch by number |
@@ -121,8 +121,8 @@ See `PROMPT.sys.example` for a starting template.
 ## Project layout
 
 ```
-julius-code/
-├── julius_code/
+julius-tex/
+├── julius_tex/
 │   ├── __init__.py
 │   ├── main.py          # CLI entry-point & chat loop
 │   ├── config.py        # Load TOKENS, PROMPT.sys, plain-text files

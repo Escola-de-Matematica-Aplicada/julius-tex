@@ -1,4 +1,4 @@
-"""Rich-based terminal UI for Julius Code."""
+"""Rich-based terminal UI for Julius Tex."""
 
 from __future__ import annotations
 
@@ -119,7 +119,7 @@ def show_help() -> None:
     """Display available slash-commands."""
     commands = [
         ("/help", "Show this help message"),
-        ("/quit  or  /exit", "Exit Julius Code"),
+        ("/quit  or  /exit", "Exit Julius Tex"),
         ("/clear", "Clear the current session's conversation history"),
         ("/provider", "Show the active provider and model"),
         ("/providers", "List all configured providers and switch by number"),
