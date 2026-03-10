@@ -1,19 +1,19 @@
 # Julius Code 🤖
 
-> Interactive AI chat assistant for your codebase — right in your terminal.
+> Interactive AI research assistant and LaTeX editor — right in your terminal.
 
-Julius Code reads your project's Markdown files, a custom system prompt, and your
-API tokens, then starts an intelligent conversation about your code.  Every
-question-and-answer pair is automatically saved as a timestamped Markdown file and
-re-loaded the next time you run the tool, so the assistant always has full context
-of previous sessions.
+Julius Code reads your project's text files (`.tex`, `.bst`, `.cls`, `.bib`, `.md`),
+a custom system prompt, and your API tokens, then starts an intelligent conversation
+about your work.  Every question-and-answer pair is automatically saved as a
+timestamped Markdown file and re-loaded the next time you run the tool, so the
+assistant always has full context of previous sessions.
 
 ---
 
 ## Features
 
 - 🤖 **Multiple AI providers** — Claude, Mistral, Perplexity, Grok, LM Studio, Ollama, GitHub Models, Azure AI Foundry
-- 📄 **Automatic context loading** — reads all `*.md` files in the current directory
+- 📄 **Automatic context loading** — reads all `.tex`, `.bst`, `.cls`, `.bib`, and `.md` files in the current directory and its sub-directories
 - 🧠 **Custom system prompt** — place a `PROMPT.sys` file in your project root
 - 💾 **Persistent history** — each exchange is saved as `julius_YYYYMMDD_HHMMSS.md`
 - ✨ **Beautiful TUI** — syntax-highlighted, streaming responses powered by [Rich](https://github.com/Textualize/rich)
@@ -54,7 +54,7 @@ julius-code
 ```
 
 Julius Code will:
-1. Read all `*.md` files in the current directory as project context.
+1. Read all `.tex`, `.bst`, `.cls`, `.bib`, and `.md` files in the current directory and its sub-directories as project context.
 2. Read `PROMPT.sys` as the session system prompt (if present).
 3. Read `TOKENS` for API keys (if present).
 4. Start an interactive chat session.
@@ -125,7 +125,7 @@ julius-code/
 ├── julius_code/
 │   ├── __init__.py
 │   ├── main.py          # CLI entry-point & chat loop
-│   ├── config.py        # Load TOKENS, PROMPT.sys, *.md files
+│   ├── config.py        # Load TOKENS, PROMPT.sys, plain-text files
 │   ├── history.py       # Save/load conversation history
 │   ├── ui.py            # Rich-based TUI components
 │   └── providers/

@@ -8,7 +8,7 @@ from pathlib import Path
 from .config import (
     build_context_block,
     estimate_tokens,
-    load_markdown_files,
+    load_text_files,
     load_system_prompt,
     load_tokens,
 )
@@ -26,8 +26,8 @@ from . import ui
 # ---------------------------------------------------------------------------
 
 _DEFAULT_SYSTEM = (
-    "You are Julius Code, an expert AI assistant for software development. "
-    "You have been given the project's Markdown documentation as context. "
+    "You are Julius, an expert AI research assistant and LaTeX editor. "
+    "You have been given the project's text files (LaTeX, BibTeX, and Markdown) as context. "
     "Use it to give accurate, actionable answers."
 )
 
@@ -38,7 +38,7 @@ def _build_system_prompt(user_prompt: str, context: str) -> str:
         return (
             f"{base}\n\n"
             "---\n\n"
-            "## Project Context (Markdown files)\n\n"
+            "## Project Context (text files)\n\n"
             f"{context}"
         )
     return base
@@ -110,12 +110,12 @@ def _cmd_models(provider: BaseProvider) -> None:
     ui.print_success(f"Model switched to [bold]{selected}[/bold]")
 
 
-def _cmd_context(md_files: list[tuple[str, str]]) -> None:
-    if not md_files:
-        ui.print_info("No *.md context files loaded.")
+def _cmd_context(text_files: list[tuple[str, str]]) -> None:
+    if not text_files:
+        ui.print_info("No context files loaded.")
         return
-    ui.print_info(f"{len(md_files)} context file(s) loaded:")
-    for name, _ in md_files:
+    ui.print_info(f"{len(text_files)} context file(s) loaded:")
+    for name, _ in text_files:
         ui.console.print(f"   [dim]·  {name}[/dim]")
     ui.console.print()
 
@@ -134,9 +134,9 @@ def _run(working_dir: Path) -> None:
     # ── Load configuration ────────────────────────────────────────────────
     tokens = load_tokens(working_dir)
     system_prompt_text = load_system_prompt(working_dir)
-    md_files = load_markdown_files(working_dir)
+    text_files = load_text_files(working_dir)
     session_files = list_session_files(working_dir)
-    context = build_context_block(md_files)
+    context = build_context_block(text_files)
     system = _build_system_prompt(system_prompt_text, context)
 
     # ── Discover providers ────────────────────────────────────────────────
@@ -153,15 +153,15 @@ def _run(working_dir: Path) -> None:
     assert provider is not None  # guaranteed by the check above
 
     # ── Welcome screen ────────────────────────────────────────────────────
-    context_names = [name for name, _ in md_files]
-    md_token_estimate = sum(estimate_tokens(content) for _, content in md_files)
+    context_names = [name for name, _ in text_files]
+    context_token_estimate = sum(estimate_tokens(content) for _, content in text_files)
     ui.show_welcome(
         provider_display=provider.display_name,
         context_files=context_names,
         session_count=len(session_files),
         has_system_prompt=bool(system_prompt_text),
         max_context_tokens=provider.max_context_tokens,
-        context_token_estimate=md_token_estimate,
+        context_token_estimate=context_token_estimate,
     )
 
     # Warn when the system prompt alone would already exceed the provider limit.
@@ -175,7 +175,7 @@ def _run(working_dir: Path) -> None:
             f"{system_token_estimate:,} tokens, which exceeds the "
             f"{provider.display_name} input limit of "
             f"{provider.max_context_tokens:,} tokens. "
-            "Remove some *.md files from this directory or switch to a "
+            "Remove some context files from this directory or switch to a "
             "provider with a larger context window."
         )
 
@@ -209,7 +209,7 @@ def _run(working_dir: Path) -> None:
             elif cmd == "/models":
                 _cmd_models(provider)
             elif cmd == "/context":
-                _cmd_context(md_files)
+                _cmd_context(text_files)
             elif cmd == "/clear":
                 history = _cmd_clear(history)
             elif cmd == "/save":
