@@ -1,4 +1,4 @@
-"""Configuration loading: TOKENS file, PROMPT.sys, and *.md context files."""
+"""Configuration loading: TOKENS file, PROMPT.sys, and plain-text context files."""
 
 from __future__ import annotations
 
@@ -42,8 +42,13 @@ def load_system_prompt(directory: Path) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Markdown context
+# Plain-text context files
 # ---------------------------------------------------------------------------
+
+# Supported plain-text file extensions for context loading.
+TEXT_FILE_EXTENSIONS: frozenset[str] = frozenset(
+    {".md", ".tex", ".bst", ".cls", ".bib"}
+)
 
 # Pattern that matches the header we write when saving sessions so we can
 # distinguish session files from plain docs if needed.
@@ -52,24 +57,37 @@ _SESSION_HEADER_RE = re.compile(
 )
 
 
-def load_markdown_files(directory: Path) -> list[tuple[str, str]]:
-    """Return ``[(filename, content), ...]`` for every ``*.md`` file found in
-    *directory* (non-recursive), sorted by name so session logs appear in
-    chronological order.
+def load_text_files(directory: Path) -> list[tuple[str, str]]:
+    """Return ``[(relative_path, content), ...]`` for every supported
+    plain-text file found in *directory* and its sub-directories, sorted by
+    relative path.
+
+    Supported extensions: ``.md``, ``.tex``, ``.bst``, ``.cls``, ``.bib``.
+    Files inside hidden directories (names starting with ``.``) are skipped.
     """
     results: list[tuple[str, str]] = []
-    for md_file in sorted(directory.glob("*.md")):
-        content = md_file.read_text(encoding="utf-8").strip()
+    for text_file in sorted(directory.rglob("*")):
+        if not text_file.is_file():
+            continue
+        if text_file.suffix not in TEXT_FILE_EXTENSIONS:
+            continue
+        rel = text_file.relative_to(directory)
+        # Skip files inside hidden directories (e.g. .git, .venv).
+        # rel.parts[:-1] contains only the parent directory components,
+        # excluding the filename itself.
+        if any(part.startswith(".") for part in rel.parts[:-1]):
+            continue
+        content = text_file.read_text(encoding="utf-8").strip()
         if content:
-            results.append((md_file.name, content))
+            results.append((str(rel), content))
     return results
 
 
-def build_context_block(md_files: list[tuple[str, str]]) -> str:
-    """Concatenate all markdown file contents into a single context string."""
-    if not md_files:
+def build_context_block(text_files: list[tuple[str, str]]) -> str:
+    """Concatenate all text file contents into a single context string."""
+    if not text_files:
         return ""
-    parts = [f"### [{name}]\n\n{content}" for name, content in md_files]
+    parts = [f"### [{name}]\n\n{content}" for name, content in text_files]
     return "\n\n---\n\n".join(parts)
 
 

@@ -85,11 +85,11 @@ def show_welcome(
         )
         if context_token_estimate > 0:
             console.print(
-                f"  [julius.info]📊 MD tokens:[/julius.info]  [dim]~{context_token_estimate:,} tokens (estimated)[/dim]"
+                f"  [julius.info]📊 Context  :[/julius.info]  [dim]~{context_token_estimate:,} tokens (estimated)[/dim]"
             )
     else:
         console.print(
-            "  [julius.dim]📄 Context  :[/julius.dim]  [dim]no *.md files found[/dim]"
+            "  [julius.dim]📄 Context  :[/julius.dim]  [dim]no text files found[/dim]"
         )
 
     prompt_status = "[green]✓ loaded[/green]" if has_system_prompt else "[dim]none (using default)[/dim]"
