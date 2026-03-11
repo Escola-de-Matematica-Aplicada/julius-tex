@@ -10,19 +10,25 @@ import httpx
 from .base import BaseProvider, Message
 
 
-def _parse_models_from_md(md_path: Path) -> list[str]:
+def _parse_models_from_md(md_path: Path, *, require_slash: bool = True) -> list[str]:
     """Extract model names from the first column of markdown tables in *md_path*.
 
     Reads every pipe-delimited table row in the file and returns the value
-    from the first column, skipping header and separator rows.  A cell is
-    treated as a valid model ID only when it contains a ``/`` character
-    (matching the ``organization/model-name`` convention used by GitHub Models).
+    from the first column, skipping header and separator rows.  Backtick
+    characters are stripped from cell values so that both plain and
+    backtick-quoted model IDs are handled correctly.
+
+    When *require_slash* is ``True`` (the default) a cell is only accepted as
+    a valid model ID when it contains a ``/`` character, matching the
+    ``organization/model-name`` convention used by GitHub Models.  Set
+    *require_slash* to ``False`` for providers (such as LM Studio) whose model
+    IDs do not follow that convention.
     """
     try:
         text = md_path.read_text(encoding="utf-8")
     except OSError as exc:
         raise OSError(
-            f"Could not read GitHub Models parameter file '{md_path}': {exc}. "
+            f"Could not read provider parameter file '{md_path}': {exc}. "
             "Ensure the file exists inside the julius_tex/providers/ package directory."
         ) from exc
 
@@ -38,10 +44,16 @@ def _parse_models_from_md(md_path: Path) -> list[str]:
         # After splitting "| a | b | c |", cols is ['', 'a', 'b', 'c', '']
         if len(cols) < 3:
             continue
-        cell = cols[1].strip()
-        # Only accept cells that look like a model ID (must contain a slash,
-        # matching the "organization/model-name" format used by GitHub Models).
-        if not cell or "/" not in cell:
+        # Strip backtick characters that some markdown files use to quote model IDs.
+        cell = cols[1].strip().strip("`")
+        if not cell:
+            continue
+        # When require_slash is True, only accept cells that look like a model
+        # ID in "organization/model-name" format (used by GitHub Models).
+        if require_slash and "/" not in cell:
+            continue
+        # Skip header-style cells that contain spaces (e.g. "ID do Modelo").
+        if " " in cell:
             continue
         models.append(cell)
     return sorted(models)
@@ -231,6 +243,19 @@ class LMStudioProvider(_OpenAICompatProvider):
     ) -> None:
         # LM Studio does not require a real API key.
         super().__init__("lm-studio", base_url.rstrip("/") + "/v1", model)
+
+    def list_models(self) -> list[str]:
+        """Return the known LM Studio model IDs from the bundled parameter file.
+
+        LM Studio returns an error from its ``GET /v1/models`` endpoint when no
+        model is loaded, making a live API call unreliable.  Instead we read the
+        curated list of valid model names from the ``lmstudio_julio.md`` file
+        that ships with this package.  LM Studio model IDs do not always follow
+        the ``organization/model-name`` convention, so the slash requirement used
+        for GitHub Models is disabled here.
+        """
+        _md = Path(__file__).parent / "lmstudio_julio.md"
+        return _parse_models_from_md(_md, require_slash=False)
 
 
 class GitHubModelsProvider(_OpenAICompatProvider):
