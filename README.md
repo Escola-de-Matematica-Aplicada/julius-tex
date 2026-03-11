@@ -107,7 +107,7 @@ See `PROMPT.sys.example` for a starting template.
 
 | Provider | Token key | Notes |
 |---|---|---|
-| Anthropic Claude | `ANTHROPIC_API_KEY` | Default model: `claude-3-5-sonnet-20241022` |
+| Anthropic Claude | `ANTHROPIC_API_KEY` | Default model: `claude-sonnet-4-5` |
 | Mistral AI | `MISTRAL_API_KEY` | Default model: `mistral-large-latest` |
 | Perplexity | `PERPLEXITY_API_KEY` | Default model: `llama-3.1-sonar-large-128k-online` |
 | Grok (xAI) | `GROK_API_KEY` | Default model: `grok-beta` |

@@ -6,8 +6,8 @@ from typing import Iterator
 
 from .base import BaseProvider, Message
 
-_DEFAULT_MODEL = "claude-3-5-sonnet-20241022"
-_MAX_TOKENS = 8192
+_DEFAULT_MODEL = "claude-sonnet-4-5"
+_MAX_TOKENS = 16_000
 _MAX_CONTEXT_TOKENS = 200_000
 
 
