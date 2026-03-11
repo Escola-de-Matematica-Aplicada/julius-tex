@@ -13,8 +13,8 @@ MISTRAL_API_KEY=your_mistral_api_key_here
 # Get your key at: https://console.anthropic.com/
 # curl https://api.anthropic.com/v1/models -X GET -H "x-api-key: $ANTHROPIC_API_KEY" -H "anthropic-version: 2023-06-06"
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
-# Optional: override default model (default: claude-sonnet-4-5)
-# CLAUDE_MODEL=claude-sonnet-4-5
+# Optional: override default model (default: claude-sonnet-4-6)
+# CLAUDE_MODEL=claude-sonnet-4-6
 
 # ─── Perplexity ───────────────────────────────────────────────────────────────
 # Get your key at: https://www.perplexity.ai/settings/api
