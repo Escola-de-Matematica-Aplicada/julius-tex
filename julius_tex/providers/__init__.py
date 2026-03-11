@@ -20,9 +20,8 @@ def get_available_providers(tokens: dict[str, str]) -> list[BaseProvider]:
             from .claude_provider import ClaudeProvider  # noqa: PLC0415
 
             model = tokens.get("CLAUDE_MODEL", "")
-            providers.append(
-                ClaudeProvider(key, model) if model else ClaudeProvider(key)
-            )
+            base_url = tokens.get("CLAUDE_BASE_URL", "")
+            providers.append(ClaudeProvider(key, model, base_url))
         except ImportError:
             pass
 
