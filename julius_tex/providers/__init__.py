@@ -140,6 +140,19 @@ def get_available_providers(tokens: dict[str, str]) -> list[BaseProvider]:
         except ImportError:
             pass
 
+    # ── Zhipu AI ───────────────────────────────────────────────────────────────
+    key = tokens.get("ZHIPU_API_KEY", "")
+    if key and not key.startswith("your_"):
+        try:
+            from .openai_compat import ZhipuAIProvider  # noqa: PLC0415
+
+            model = tokens.get("ZHIPU_MODEL", "")
+            providers.append(
+                ZhipuAIProvider(key, model) if model else ZhipuAIProvider(key)
+            )
+        except ImportError:
+            pass
+
     return providers
 
 
