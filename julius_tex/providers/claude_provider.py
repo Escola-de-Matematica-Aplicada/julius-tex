@@ -33,9 +33,20 @@ class ClaudeProvider(BaseProvider):
 
         Uses limit=1000 (the API maximum) to retrieve all models in a single
         request, avoiding pagination.
+
+        Only model objects whose ``type`` field equals ``"model"`` are
+        included.  The Anthropic SDK uses lenient (non-strict) response
+        parsing, so if the underlying HTTP call accidentally reaches a
+        different OpenAI-compatible endpoint (e.g. LM Studio), those
+        responses are parsed without validation and their model objects will
+        have ``type=None`` — filtering on ``type == "model"`` ensures only
+        genuine Anthropic models are returned.
         """
-        response = self._client.models.list(limit=1000)
-        return sorted(m.id for m in response.data)
+        return sorted(
+            m.id
+            for m in self._client.models.list(limit=1000)
+            if m.type == "model"
+        )
 
     def stream_chat(
         self,
