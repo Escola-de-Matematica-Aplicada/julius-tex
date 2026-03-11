@@ -1,4 +1,4 @@
-"""Julius Code — main entry point and chat loop."""
+"""Julius Tex — main entry point and chat loop."""
 
 from __future__ import annotations
 

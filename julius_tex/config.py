@@ -53,7 +53,7 @@ TEXT_FILE_EXTENSIONS: frozenset[str] = frozenset(
 # Pattern that matches the header we write when saving sessions so we can
 # distinguish session files from plain docs if needed.
 _SESSION_HEADER_RE = re.compile(
-    r"^# Julius Code — Chat Session\b", re.MULTILINE
+    r"^# Julius Tex — Chat Session\b", re.MULTILINE
 )
 
 
