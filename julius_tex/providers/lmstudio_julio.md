@@ -23,3 +23,5 @@
 | `mistralai/mistral-small-3.2`             | 131,072                     |
 | `nvidia/nemotron-3-nano`                  | 1,048,576                   |
 | `deepseek/deepseek-r1-0528-qwen3-8b`      | 131,072                     |
+| `zai-org/glm-4.7-flash`                   | 202,752                     |
+| `unsloth/qwen3-coder-30b-a3b-instruct`    | 262,144                     |
