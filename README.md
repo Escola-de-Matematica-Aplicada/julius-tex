@@ -12,7 +12,7 @@ assistant always has full context of previous sessions.
 
 ## Features
 
-- 🤖 **Multiple AI providers** — Claude, Mistral, Perplexity, Grok, LM Studio, Ollama, GitHub Models, Azure AI Foundry
+- 🤖 **Multiple AI providers** — Claude, Mistral, Perplexity, Grok, LM Studio, Ollama, GitHub Models, Azure AI Foundry, Alibaba Cloud, Zhipu AI (z.ai)
 - 📄 **Automatic context loading** — reads all `.tex`, `.bst`, `.cls`, `.bib`, and `.md` files in the current directory and its sub-directories
 - 🧠 **Custom system prompt** — place a `PROMPT.sys` file in your project root
 - 💾 **Persistent history** — each exchange is saved as `julius_YYYYMMDD_HHMMSS.md`
@@ -115,6 +115,8 @@ See `PROMPT.sys.example` for a starting template.
 | Ollama | `OLLAMA_URL` | Local — native Ollama API |
 | GitHub Models | `GITHUB_TOKEN` | Default model: `openai/gpt-4o-mini` — [catalog](https://models.github.ai/catalog/models) |
 | Azure AI Foundry | `AZURE_AI_FOUNDRY_API_KEY` + `AZURE_AI_FOUNDRY_ENDPOINT` | Default model: `gpt-4o` — [docs](https://ai.azure.com/) |
+| Alibaba Cloud | `DASHSCOPE_API_KEY` | Default model: `qwen-max` — [docs](https://bailian.console.alibabacloud.com/) |
+| Zhipu AI (z.ai) | `ZHIPU_API_KEY` | Default model: `glm-4` — [docs](https://open.bigmodel.cn/) |
 
 ---
 
@@ -133,7 +135,7 @@ julius-tex/
 │       ├── base.py              # BaseProvider ABC
 │       ├── claude_provider.py   # Anthropic Claude
 │       ├── mistral_provider.py  # Mistral AI
-│       ├── openai_compat.py     # Perplexity, Grok, LM Studio, GitHub Models, Azure AI Foundry
+│       ├── openai_compat.py     # Perplexity, Grok, LM Studio, GitHub Models, Azure AI Foundry, Alibaba Cloud, Zhipu AI
 │       └── ollama_provider.py   # Ollama
 ├── TOKENS.example       # Template — copy to TOKENS and fill in
 ├── PROMPT.sys.example   # Example system prompt

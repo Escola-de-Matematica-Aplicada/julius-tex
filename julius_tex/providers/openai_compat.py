@@ -1,4 +1,4 @@
-"""OpenAI-compatible providers: Perplexity, Grok (xAI), LM Studio, GitHub Models, Azure AI Foundry, and Alibaba Cloud."""
+"""OpenAI-compatible providers: Perplexity, Grok (xAI), LM Studio, GitHub Models, Azure AI Foundry, Alibaba Cloud, and Zhipu AI."""
 
 from __future__ import annotations
 
@@ -89,6 +89,11 @@ _ALIBABA_CLOUD_DEFAULT_MODEL = "qwen-max"
 # The DashScope OpenAI-compatible endpoint enforces a strict input limit of
 # 30,720 tokens (total context window is 32,768, with 2,048 reserved for output).
 _ALIBABA_CLOUD_MAX_CONTEXT_TOKENS = 1_000_000
+
+# ─── Zhipu AI (z.ai / BigModel) ───────────────────────────────────────────────
+_ZHIPU_AI_BASE_URL = "https://open.bigmodel.cn/api/paas/v4/"
+_ZHIPU_AI_DEFAULT_MODEL = "glm-4"
+_ZHIPU_AI_MAX_CONTEXT_TOKENS = 128_000
 
 
 class _OpenAICompatProvider(BaseProvider):
@@ -297,3 +302,21 @@ class AlibabaCloudProvider(_OpenAICompatProvider):
         model: str = _ALIBABA_CLOUD_DEFAULT_MODEL,
     ) -> None:
         super().__init__(api_key, _ALIBABA_CLOUD_BASE_URL, model)
+
+
+class ZhipuAIProvider(_OpenAICompatProvider):
+    """Streams responses from Zhipu AI (z.ai / BigModel) via the OpenAI-compatible API.
+
+    Endpoint: https://open.bigmodel.cn/api/paas/v4/
+    Get your API key at: https://open.bigmodel.cn/
+    """
+
+    name = "ZhipuAI"
+    max_context_tokens = _ZHIPU_AI_MAX_CONTEXT_TOKENS
+
+    def __init__(
+        self,
+        api_key: str,
+        model: str = _ZHIPU_AI_DEFAULT_MODEL,
+    ) -> None:
+        super().__init__(api_key, _ZHIPU_AI_BASE_URL, model)

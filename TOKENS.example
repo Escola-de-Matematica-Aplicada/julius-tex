@@ -44,7 +44,7 @@ OLLAMA_URL=http://localhost:11434
 
 # ─── Default Provider ─────────────────────────────────────────────────────────
 # Set the default provider to use when multiple are configured.
-# Options: claude, mistral, perplexity, grok, lmstudio, ollama, github, azureaifoundry, alibabacloud
+# Options: claude, mistral, perplexity, grok, lmstudio, ollama, github, azureaifoundry, alibabacloud, zhipuai
 # DEFAULT_PROVIDER=claude
 
 # ─── GitHub Models ─────────────────────────────────────────────────
@@ -71,3 +71,10 @@ AZURE_AI_FOUNDRY_API_KEY=your_azure_ai_foundry_api_key_here
 DASHSCOPE_API_KEY=your_dashscope_api_key_here
 # Optional: override default model (default: qwen-max)
 # ALIBABA_CLOUD_MODEL=qwen-max
+
+# ─── Zhipu AI (z.ai / BigModel) ───────────────────────────────────────────────
+# Get your API key at: https://open.bigmodel.cn/
+# Endpoint: https://open.bigmodel.cn/api/paas/v4/
+ZHIPU_API_KEY=your_zhipu_api_key_here
+# Optional: override default model (default: glm-4)
+# ZHIPU_MODEL=glm-4
