@@ -381,8 +381,13 @@ class MoonshotProvider(_OpenAICompatProvider):
         super().__init__(api_key, _MOONSHOT_BASE_URL, model)
 
     def list_models(self) -> list[str]:
-        """Return the known Moonshot AI models."""
-        return list(_MOONSHOT_MODELS)
+        """Return the list of available models from the Moonshot AI API."""
+        try:
+            response = self._client.models.list()
+            return sorted(m.id for m in response.data)
+        except Exception as e:
+            print(f"Erro ao listar modelos: {e}")
+            return []
 
     def stream_chat(
         self,
