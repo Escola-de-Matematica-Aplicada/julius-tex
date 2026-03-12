@@ -30,12 +30,17 @@ def get_available_providers(tokens: dict[str, str]) -> list[BaseProvider]:
     if key and not key.startswith("your_"):
         try:
             from .mistral_provider import MistralProvider  # noqa: PLC0415
-
+            print("MistralProvider importado com sucesso!")  # Adicione esta linha para depurar
             model = tokens.get("MISTRAL_MODEL", "")
-            providers.append(
-                MistralProvider(key, model) if model else MistralProvider(key)
-            )
-        except ImportError:
+            provider = MistralProvider(key, model) if model else MistralProvider(key)
+            print(f"Provider Mistral criado: {provider}")  # Adicione esta linha para depurar
+            providers.append(provider)
+            print(f"Provider Mistral adicionado à lista: {providers}")  # Adicione esta linha para depurar
+        except ImportError as e:
+            print(f"Erro ao importar MistralProvider: {e}")  # Adicione esta linha para depurar
+            pass
+        except Exception as e:
+            print(f"Erro ao criar MistralProvider: {e}")  # Adicione esta linha para depurar
             pass
 
     # ── Perplexity ─────────────────────────────────────────────────────────

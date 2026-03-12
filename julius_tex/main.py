@@ -57,6 +57,7 @@ def _cmd_provider(provider: BaseProvider) -> None:
 
 
 def _cmd_providers(providers: list[BaseProvider], current: BaseProvider) -> BaseProvider:
+    print(f"Lista de providers: {providers}")  # Adicione esta linha para depurar
     if not providers:
         ui.print_warning("No providers are configured.")
         return current
