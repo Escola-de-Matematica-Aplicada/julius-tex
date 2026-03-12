@@ -154,6 +154,19 @@ def get_available_providers(tokens: dict[str, str]) -> list[BaseProvider]:
         except ImportError:
             pass
 
+    # ── Moonshot AI ────────────────────────────────────────────────────────────
+    key = tokens.get("MOONSHOT_API_KEY", "")
+    if key and not key.startswith("your_"):
+        try:
+            from .openai_compat import MoonshotProvider  # noqa: PLC0415
+
+            model = tokens.get("MOONSHOT_MODEL", "")
+            providers.append(
+                MoonshotProvider(key, model) if model else MoonshotProvider(key)
+            )
+        except ImportError:
+            pass
+
     return providers
 
 
