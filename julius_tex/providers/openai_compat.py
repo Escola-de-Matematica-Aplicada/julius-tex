@@ -1,4 +1,4 @@
-"""OpenAI-compatible providers: Perplexity, Grok (xAI), LM Studio, GitHub Models, Azure AI Foundry, Alibaba Cloud, and Zhipu AI."""
+"""OpenAI-compatible providers: Perplexity, Grok (xAI), LM Studio, GitHub Models, Azure AI Foundry, Alibaba Cloud, Zhipu AI, and Moonshot AI."""
 
 from __future__ import annotations
 
@@ -106,6 +106,20 @@ _ALIBABA_CLOUD_MAX_CONTEXT_TOKENS = 1_000_000
 _ZHIPU_AI_BASE_URL = "https://open.bigmodel.cn/api/paas/v4/"
 _ZHIPU_AI_DEFAULT_MODEL = "glm-4"
 _ZHIPU_AI_MAX_CONTEXT_TOKENS = 128_000
+
+# ─── Moonshot AI ──────────────────────────────────────────────────────────────
+_MOONSHOT_BASE_URL = "https://api.moonshot.ai/v1"
+_MOONSHOT_DEFAULT_MODEL = "kimi-k2.5"
+_MOONSHOT_MAX_OUTPUT_TOKENS = 1024 * 32
+_MOONSHOT_MAX_CONTEXT_TOKENS = 256_000
+# Moonshot does not require explicit reasoning parameters — thinking is enabled
+# by default for kimi-k2.5 models.
+_MOONSHOT_MODELS = [
+    "kimi-k2.5",
+    "moonshot-v1-8k",
+    "moonshot-v1-32k",
+    "moonshot-v1-128k",
+]
 
 
 class _OpenAICompatProvider(BaseProvider):
@@ -344,3 +358,101 @@ class ZhipuAIProvider(_OpenAICompatProvider):
         model: str = _ZHIPU_AI_DEFAULT_MODEL,
     ) -> None:
         super().__init__(api_key, _ZHIPU_AI_BASE_URL, model)
+
+
+class MoonshotProvider(_OpenAICompatProvider):
+    """Streams responses from Moonshot AI with reasoning (thinking) enabled.
+
+    Endpoint: https://api.moonshot.ai/v1
+    Get your API key at: https://platform.moonshot.ai/
+    Thinking is enabled by default for kimi-k2.5 models — no extra parameters
+    needed.  The provider exposes ``reasoning_content`` chunks in the stream
+    which are rendered as a collapsible thinking block before the final answer.
+    """
+
+    name = "Moonshot"
+    max_context_tokens = _MOONSHOT_MAX_CONTEXT_TOKENS
+
+    def __init__(
+        self,
+        api_key: str,
+        model: str = _MOONSHOT_DEFAULT_MODEL,
+    ) -> None:
+        super().__init__(api_key, _MOONSHOT_BASE_URL, model)
+
+    def list_models(self) -> list[str]:
+        """Return the known Moonshot AI models."""
+        return list(_MOONSHOT_MODELS)
+
+    def stream_chat(
+        self,
+        messages: list[Message],
+        system: str = "",
+    ) -> Iterator[str]:
+        from ..config import estimate_tokens  # noqa: PLC0415
+
+        system_tokens = estimate_tokens(system) if system else 0
+        limit = self.max_context_tokens
+
+        if limit is not None:
+            if system_tokens > limit:
+                raise ValueError(
+                    f"The system prompt and context files are too large for "
+                    f"{self.name} ({system_tokens:,} estimated tokens; limit "
+                    f"is {limit:,}). Remove some *.md files from this "
+                    "directory or switch to a provider with a larger context "
+                    "window."
+                )
+
+            conv_msgs: list[dict] = [
+                {"role": m.role, "content": m.content}
+                for m in messages
+                if m.role in ("user", "assistant")
+            ]
+
+            while len(conv_msgs) > 1:
+                total = system_tokens + sum(
+                    estimate_tokens(msg["content"]) for msg in conv_msgs
+                )
+                if total <= limit:
+                    break
+                conv_msgs.pop(0)
+
+            api_messages: list[dict] = []
+            if system:
+                api_messages.append({"role": "system", "content": system})
+            api_messages.extend(conv_msgs)
+        else:
+            api_messages = []
+            if system:
+                api_messages.append({"role": "system", "content": system})
+            for m in messages:
+                if m.role in ("user", "assistant"):
+                    api_messages.append({"role": m.role, "content": m.content})
+
+        stream = self._client.chat.completions.create(
+            model=self.model,
+            messages=api_messages,
+            max_tokens=_MOONSHOT_MAX_OUTPUT_TOKENS,
+            stream=True,
+        )
+
+        thinking = False
+        for chunk in stream:
+            if not chunk.choices:
+                continue
+            choice = chunk.choices[0]
+            if not choice.delta:
+                continue
+            reasoning = getattr(choice.delta, "reasoning_content", None)
+            if reasoning:
+                if not thinking:
+                    thinking = True
+                    yield "\n💭 *Thinking...*\n\n"
+                yield reasoning
+            content = choice.delta.content
+            if content:
+                if thinking:
+                    thinking = False
+                    yield "\n\n---\n\n"
+                yield content
