@@ -245,17 +245,16 @@ class LMStudioProvider(_OpenAICompatProvider):
         super().__init__("lm-studio", base_url.rstrip("/") + "/v1", model)
 
     def list_models(self) -> list[str]:
-        """Return the known LM Studio model IDs from the bundled parameter file.
+        """Return the list of available models from the LM Studio API.
 
-        LM Studio returns an error from its ``GET /v1/models`` endpoint when no
-        model is loaded, making a live API call unreliable.  Instead we read the
-        curated list of valid model names from the ``lmstudio_julio.md`` file
-        that ships with this package.  LM Studio model IDs do not always follow
-        the ``organization/model-name`` convention, so the slash requirement used
-        for GitHub Models is disabled here.
+        Calls the LM Studio API to dynamically fetch the list of available models.
         """
-        _md = Path(__file__).parent / "lmstudio_julio.md"
-        return _parse_models_from_md(_md, require_slash=False)
+        try:
+            response = self._client.models.list()
+            return sorted(m.id for m in response.data)
+        except Exception as e:
+            print(f"Erro ao listar modelos: {e}")
+            return []
 
 
 class GitHubModelsProvider(_OpenAICompatProvider):
