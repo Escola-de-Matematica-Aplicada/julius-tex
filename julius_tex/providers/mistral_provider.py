@@ -67,9 +67,9 @@ class MistralProvider(BaseProvider):
             return []
 
     def stream_chat(
-        self,
-        messages: list[Message],
-        system: str = "",
+            self,
+            messages: list[Message],
+            system: str = "",
     ) -> Iterator[str]:
         api_messages: list[dict] = []
         if system:
@@ -85,10 +85,14 @@ class MistralProvider(BaseProvider):
             )
             for chunk in stream:
                 if (
-                    chunk.data.choices
-                    and chunk.data.choices[0].delta.content is not None
+                        chunk.data.choices
+                        and chunk.data.choices[0].delta.content is not None
                 ):
-                    yield chunk.data.choices[0].delta.content
+                    content = chunk.data.choices[0].delta.content
+                    if isinstance(content, str):
+                        yield content
+                    # Se content não for string (ex.: lista ou dict), pule para evitar TypeError
+                    # Isso trata variações da API ou respostas multi-modais
         except Exception as e:
             print(f"Erro ao transmitir chat: {e}")
             yield ""
