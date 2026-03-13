@@ -251,12 +251,27 @@ class LMStudioProvider(_OpenAICompatProvider):
     name = "LMStudio"
 
     def __init__(
-        self,
-        base_url: str = _LMSTUDIO_DEFAULT_URL,
-        model: str = _LMSTUDIO_DEFAULT_MODEL,
+            self,
+            base_url: str = _LMSTUDIO_DEFAULT_URL,
+            model: str = _LMSTUDIO_DEFAULT_MODEL,
     ) -> None:
         # LM Studio does not require a real API key.
-        super().__init__("lm-studio", base_url.rstrip("/") + "/v1", model)
+        # Create httpx client with custom timeout for local server
+        httpx_client = httpx.Client(timeout=30000)
+        try:
+            from openai import OpenAI  # noqa: PLC0415
+            # Pass httpx_client via http_client to OpenAI client
+            self._client = OpenAI(
+                api_key="lm-studio",
+                base_url=base_url.rstrip("/") + "/v1",
+                http_client=httpx_client,
+            )
+        except ImportError as exc:
+            raise ImportError(
+                "The 'openai' package is required. "
+                "Install it with:  pip install openai"
+            ) from exc
+        self.model = model
 
     def list_models(self) -> list[str]:
         """Return the list of available models from the LM Studio API.
