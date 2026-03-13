@@ -1,3 +1,26 @@
+
+# Mistral AI — Limites de Contexto (2026)
+
+## Modelos Principais
+
+| Modelo                          | Contexto Máximo | Tipo                  | Observação                          |
+|-------------------------------|-----------------|-----------------------|-------------------------------------|
+| `mistral-large-latest`        | 256k            | Frontier multimodal   | Recomendado (melhor custo-benefício) |
+| `mistral-large-3`             | 256k            | Frontier multimodal   | Versão mais recente do Large       |
+| `mistral-medium-3.1`          | 128k            | Multimodal            | Bom equilíbrio                     |
+| `mistral-small-3.2`           | 128k            | Small multimodal      | Rápido e eficiente                 |
+| `ministral-3-14b`             | 256k            | Edge / Local          | Excelente para execução local      |
+| `ministral-3-8b`              | 256k            | Edge / Local          | Versão menor da família Ministral  |
+| `codestral-latest`            | 256k            | Código                | Especializado em programação       |
+| `pixtral-12b`                 | 128k            | Visão + Texto         | Multimodal (imagens)               |
+
+**Recomendação atual**: Use `mistral-large-latest` (256k).
+
+---
+
+**Nota**: O limite de contexto é o total de tokens (prompt + histórico + resposta). O Julius agora define automaticamente o `max_context_tokens` conforme o modelo escolhido.
+
+
 6/3/2026
 
 Hoje a Mistral AI publica uma família grande de modelos; abaixo estão os principais modelos listados na página oficial de modelos e no índice de modelos, com suas respectivas janelas de contexto máximas (input + output) conforme documentação pública até março de 2026. [mistral](https://mistral.ai/models)
