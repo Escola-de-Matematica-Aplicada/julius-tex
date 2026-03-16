@@ -87,6 +87,6 @@ MOONSHOT_API_KEY=your_moonshot_api_key_here
 # ─── NVIDIA ───────────────────────────────────────────────────────────────────
 # Get your API key at: https://build.nvidia.com/
 # Endpoint: https://integrate.api.nvidia.com/v1
-NVIDIA_API_KEY=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
+NVIDIA_API_KEY=<your key>
 # Optional: override default model (default: z-ai/glm4.7)
 # NVIDIA_MODEL=z-ai/glm4.7
