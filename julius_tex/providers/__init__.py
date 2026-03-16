@@ -167,6 +167,19 @@ def get_available_providers(tokens: dict[str, str]) -> list[BaseProvider]:
         except ImportError:
             pass
 
+    # ── NVIDIA ─────────────────────────────────────────────────────────────────
+    key = tokens.get("NVIDIA_API_KEY", "")
+    if key and not key.startswith("your_"):
+        try:
+            from .openai_compat import NvidiaProvider  # noqa: PLC0415
+
+            model = tokens.get("NVIDIA_MODEL", "")
+            providers.append(
+                NvidiaProvider(key, model) if model else NvidiaProvider(key)
+            )
+        except ImportError:
+            pass
+
     return providers
 
 

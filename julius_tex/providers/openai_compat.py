@@ -121,6 +121,11 @@ _MOONSHOT_MODELS = [
     "moonshot-v1-128k",
 ]
 
+# ─── NVIDIA ───────────────────────────────────────────────────────────────────
+_NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
+_NVIDIA_DEFAULT_MODEL = "qwen/qwen3.5-122b-a10b"
+_NVIDIA_MAX_CONTEXT_TOKENS = 200_000
+
 
 class _OpenAICompatProvider(BaseProvider):
     """Shared implementation for providers that expose an OpenAI-compatible API."""
@@ -207,6 +212,34 @@ class _OpenAICompatProvider(BaseProvider):
             delta = chunk.choices[0].delta.content if chunk.choices else None
             if delta:
                 yield delta
+
+
+class NvidiaProvider(_OpenAICompatProvider):
+    """Streams responses from NVIDIA AI API.
+    
+    Endpoint: https://integrate.api.nvidia.com/v1
+    Get your API key at: https://build.nvidia.com/
+    """
+
+    name = "NVIDIA"
+    max_context_tokens = _NVIDIA_MAX_CONTEXT_TOKENS
+
+    def __init__(
+        self,
+        api_key: str,
+        model: str = _NVIDIA_DEFAULT_MODEL,
+    ) -> None:
+        super().__init__(api_key, _NVIDIA_BASE_URL, model)
+
+    def list_models(self) -> list[str]:
+        """Return the valid NVIDIA models from the bundled parameter file.
+
+        The NVIDIA API may not expose all models via the GET /models endpoint,
+        so we read the curated list of valid model names from the
+        ``nvidia_max_tokens.md`` file that ships with this package.
+        """
+        _md = Path(__file__).parent / "nvidia_max_tokens.md"
+        return _parse_models_from_md(_md, require_slash=False)
 
 
 class PerplexityProvider(_OpenAICompatProvider):
