@@ -1,9 +1,7 @@
-"""Minimax provider (Anthropic-like API).
+"""Minimax provider using native API.
 
-This provider implements dynamic model listing for Minimax (text-anthropic
-compatible) by calling the provider's /v1/models endpoint. Streaming chat is
-not implemented because Minimax's streaming contract may differ between
-installations; add it later if needed.
+This provider implements Minimax's /v1/text/chatcompletion_v2 API with proper
+message formatting including the 'name' field for each role.
 """
 from __future__ import annotations
 
@@ -13,15 +11,13 @@ import httpx
 
 from .base import BaseProvider, Message
 
-_DEFAULT_BASE_URL = "https://api.minimax.io/anthropic"
+_DEFAULT_BASE_URL = "https://api.minimax.io"
 
 
 class MinimaxProvider(BaseProvider):
-    """Provider for Minimax (Anthropic-compatible text API).
+    """Provider for Minimax using native /v1/text/chatcompletion_v2 API.
 
-    Only model listing is implemented reliably. Streaming APIs vary; implement
-    stream_chat here if a compatible streaming endpoint is available in your
-    Minimax deployment.
+    Implements non-streaming chat completion with proper message formatting.
     """
 
     name = "Minimax"
@@ -33,22 +29,9 @@ class MinimaxProvider(BaseProvider):
         self.model = model or ""
         self.base_url = (base_url.rstrip("/") if base_url else _DEFAULT_BASE_URL).rstrip("/")
         self._client = httpx.Client()
-        # Prefer using the official Anthropic client when available because
-        # Minimax exposes an Anthropic-compatible API. Fall back to raw HTTP.
-        self._anthropic_client = None
-        try:
-            import anthropic  # type: ignore
-
-            try:
-                self._anthropic_client = anthropic.Anthropic(api_key=api_key, base_url=self.base_url)
-            except TypeError:
-                # Some versions accept different param names
-                self._anthropic_client = anthropic.Anthropic(api_key=api_key)
-        except Exception:
-            # anthropic package not installed or client creation failed; ok to proceed
-            self._anthropic_client = None
 
     _MINIMAX_MODELS = [
+        "M2-her",
         "MiniMax-M2.5",
         "MiniMax-M2.5-highspeed",
         "MiniMax-M2.1",
@@ -108,168 +91,72 @@ class MinimaxProvider(BaseProvider):
             return list(self._MINIMAX_MODELS)
 
     def stream_chat(self, messages: list[Message], system: str = "") -> Iterator[str]:
-        """Stream assistant text from Minimax using an Anthropic-like streaming API.
+        """Stream assistant text from Minimax using the /v1/text/chatcompletion_v2 API.
 
-        The implementation tries a few common Anthropic/OpenAI-compatible
-        streaming endpoints and accepts both SSE-style "data: ..." lines and
-        raw chunked text. It attempts to extract text from common JSON shapes
-        but will fall back to yielding raw chunks when the shape is unknown.
+        The implementation uses Minimax's native API format with proper message structure
+        including the 'name' field for each message role.
         """
         import json
 
-        # Build conversation (only user/assistant turns) and include system when present
-        api_messages = [
-            {"role": m.role, "content": m.content}
-            for m in messages
-            if m.role in ("user", "assistant")
-        ]
+        # Build conversation with Minimax's expected format
+        api_messages = []
+
+        # Add system message if present
         if system:
-            api_messages = [{"role": "system", "content": system}] + api_messages
+            api_messages.append({"role": "system", "content": system, "name": "MiniMax AI"})
+
+        # Add user/assistant turns with name field
+        for m in messages:
+            if m.role == "user":
+                api_messages.append({"role": "user", "content": m.content, "name": "User"})
+            elif m.role == "assistant":
+                api_messages.append({"role": "assistant", "content": m.content, "name": "MiniMax AI"})
 
         # Choose a model: prefer configured, otherwise pick first fallback
-        model = self.model or (self._MINIMAX_MODELS[0] if self._MINIMAX_MODELS else "")
+        model = self.model or (self._MINIMAX_MODELS[0] if self._MINIMAX_MODELS else "M2-her")
 
-        payload = {"model": model, "messages": api_messages, "stream": True}
+        payload = {"model": model, "messages": api_messages}
         headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
 
-        # If an Anthropic client is available, prefer it because Minimax's
-        # Anthropic-compatible API is known to work with that client.
-        if self._anthropic_client is not None:
-            kwargs = dict(model=model, max_tokens=16_000, messages=api_messages)
-            try:
-                # Newer Anthropic SDKs expose a stream helper
-                if hasattr(self._anthropic_client.messages, "stream"):
-                    with self._anthropic_client.messages.stream(**kwargs) as stream:
-                        for text in stream.text_stream:
-                            yield text
-                    return
+        # Use Minimax's native API endpoint
+        endpoint = f"{self.base_url}/v1/text/chatcompletion_v2"
 
-                # Fallback: call create with stream=True and iterate
-                stream = self._anthropic_client.messages.create(stream=True, **kwargs)
-                for chunk in stream:
-                    # Try to extract textual content from chunk
-                    text = None
-                    try:
-                        # chunk may be a dict-like or object with attributes
-                        if isinstance(chunk, dict):
-                            # Anthropic sometimes yields {"delta": {"content": ""}}
-                            delta = chunk.get("delta") or {}
-                            if isinstance(delta, dict):
-                                text = delta.get("content") or delta.get("text")
-                            text = text or chunk.get("text") or chunk.get("content")
-                        else:
-                            # Some SDKs return objects with .text attribute
-                            text = getattr(chunk, "text", None) or getattr(chunk, "content", None)
-                    except Exception:
-                        text = None
-                    if text:
-                        yield text
-                return
-            except Exception:
-                # Streaming via anthropic client failed; try non-streaming create()
-                try:
-                    resp = self._anthropic_client.messages.create(stream=False, **kwargs)
-                    # resp may be an object or dict; attempt to extract final text
-                    final = None
-                    try:
-                        if isinstance(resp, dict):
-                            # common shapes
-                            final = resp.get("text") or resp.get("content") or resp.get("output")
-                            if not final:
-                                choices = resp.get("choices") or resp.get("data")
-                                if isinstance(choices, list) and choices:
-                                    c = choices[0]
-                                    if isinstance(c, dict):
-                                        final = c.get("text") or c.get("message") or c.get("content")
-                        else:
-                            final = getattr(resp, "text", None) or getattr(resp, "content", None)
-                    except Exception:
-                        final = None
-                    if final:
-                        yield final
-                        return
-                except Exception:
-                    pass
-                # Fall through to HTTP-streaming attempts
+        try:
+            # Make non-streaming request to Minimax API
+            resp = self._client.post(endpoint, headers=headers, json=payload, timeout=60.0)
 
-        # Last-resort: attempt generic HTTP streaming endpoints (existing logic)
-        endpoints = [
-            f"{self.base_url}/v1/stream",
-            f"{self.base_url}/v1/streams",
-            f"{self.base_url}/v1/complete",
-            f"{self.base_url}/v1/chat/completions",
-            f"{self.base_url}/v1/messages",
-            f"{self.base_url}/v1/ai/text?stream=true",
-        ]
+            if resp.status_code >= 400:
+                error_text = resp.text
+                raise RuntimeError(f"Minimax API error (status {resp.status_code}): {error_text}")
 
-        # Try each endpoint until one yields data
-        for endpoint in endpoints:
-            try:
-                with self._client.stream("POST", endpoint, headers=headers, json=payload, timeout=60.0) as resp:
-                    if resp.status_code >= 400:
-                        # Try next endpoint
-                        continue
+            # Parse response
+            data = resp.json()
 
-                    got_any = False
+            # Extract text from Minimax response format
+            text_content = None
+            if isinstance(data, dict):
+                # Try common response shapes
+                choices = data.get("choices")
+                if isinstance(choices, list) and choices:
+                    for choice in choices:
+                        if isinstance(choice, dict):
+                            message = choice.get("message")
+                            if isinstance(message, dict):
+                                text_content = message.get("content")
+                                if text_content:
+                                    break
+                            # Alternative shapes
+                            text_content = text_content or choice.get("text") or choice.get("content")
+                            if text_content:
+                                break
 
-                    # Prefer SSE-style lines
-                    for raw in resp.iter_lines(decode_unicode=True):
-                        if raw is None:
-                            continue
-                        line = raw.strip()
-                        if not line:
-                            continue
-                        got_any = True
-                        # SSE-style: lines may start with "data: "
-                        if line.startswith("data: "):
-                            line = line[len("data: "):]
-                        if line in ("[DONE]", "[done]"):
-                            return
+                # Direct content field
+                text_content = text_content or data.get("content") or data.get("text")
 
-                        # Try to parse JSON and extract text
-                        text_chunk = None
-                        try:
-                            obj = json.loads(line)
-                            # Common shapes: {"choices":[{"delta":{"content":"..."}}]}
-                            if isinstance(obj, dict):
-                                choices = obj.get("choices")
-                                if isinstance(choices, list) and choices:
-                                    for ch in choices:
-                                        if isinstance(ch, dict):
-                                            delta = ch.get("delta") or {}
-                                            if isinstance(delta, dict):
-                                                text_chunk = delta.get("content") or delta.get("text")
-                                                if text_chunk:
-                                                    break
-                                            # older shapes
-                                            text_chunk = text_chunk or ch.get("text") or ch.get("message")
-                                            if text_chunk:
-                                                break
-                                # other shapes
-                                text_chunk = text_chunk or obj.get("content") or obj.get("text") or obj.get("output")
-                        except Exception:
-                            # Not JSON — treat line as raw text chunk
-                            text_chunk = line
+            if text_content:
+                yield text_content
+            else:
+                raise RuntimeError(f"Could not extract text from Minimax response: {data}")
 
-                        if text_chunk:
-                            yield text_chunk
-
-                    # If the response didn't use iter_lines but used chunked text,
-                    # fall back to iter_text
-                    if not got_any:
-                        for chunk in resp.iter_text(chunk_size=1024):
-                            if not chunk:
-                                continue
-                            yield chunk
-
-                    # Successful endpoint — stop trying others
-                    return
-            except Exception:  # noqa: BLE001
-                # Try next endpoint on any error
-                continue
-
-        # If all endpoints failed, raise an informative error
-        raise RuntimeError(
-            "Could not stream from Minimax: no supported streaming endpoint responded. "
-            "Ensure MINIMAX_BASE_URL is correct and the deployment supports streaming."
-        )
+        except Exception as exc:
+            raise RuntimeError(f"Failed to communicate with Minimax API: {exc}") from exc
