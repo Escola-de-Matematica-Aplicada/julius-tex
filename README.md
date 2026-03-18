@@ -108,6 +108,7 @@ See `PROMPT.sys.example` for a starting template.
 | Provider | Token key | Notes |
 |---|---|---|
 | Anthropic Claude | `ANTHROPIC_API_KEY` | Default model: `claude-sonnet-4-5` |
+| Minimax | `MINIMAX_API_KEY` | Anthropic-compatible API (text-anthropic) — list models with /models |
 | Mistral AI | `MISTRAL_API_KEY` | Default model: `mistral-large-latest` |
 | Perplexity | `PERPLEXITY_API_KEY` | Default model: `llama-3.1-sonar-large-128k-online` |
 | Grok (xAI) | `GROK_API_KEY` | Default model: `grok-beta` |
@@ -144,8 +145,6 @@ julius-tex/
 ```
 
 ---
-## TODO
-Informa a quantidade máxima de tokens do modelo escolhido e calcule a quantidade de tokens resultante da soma de todos os arquivos "*.md" que estão na pasta de trabalho.  
 
 ## License
 
