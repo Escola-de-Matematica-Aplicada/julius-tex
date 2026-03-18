@@ -274,24 +274,16 @@ class LMStudioProvider(_OpenAICompatProvider):
         self.model = model
 
     def list_models(self) -> list[str]:
-        """Return the list of available models for LM Studio.
+        """Return the list of available models from the LM Studio API.
 
-        Prefer reading the bundled "lmstudio_julio.md" parameter file shipped with
-        the package to avoid making network calls during tests or when the local
-        LM Studio server is not running. If the bundled file is missing or
-        cannot be parsed, fall back to calling the LM Studio API.
+        Calls the LM Studio API to dynamically fetch the list of available models.
         """
-        _md = Path(__file__).parent / "lmstudio_julio.md"
         try:
-            return _parse_models_from_md(_md, require_slash=False)
-        except Exception:
-            # Fall back to live API if bundled file is unavailable
-            try:
-                response = self._client.models.list()
-                return sorted(m.id for m in response.data)
-            except Exception as e:
-                print(f"Erro ao listar modelos: {e}")
-                return []
+            response = self._client.models.list()
+            return sorted(m.id for m in response.data)
+        except Exception as e:
+            print(f"Erro ao listar modelos: {e}")
+            return []
 
 
 class GitHubModelsProvider(_OpenAICompatProvider):
