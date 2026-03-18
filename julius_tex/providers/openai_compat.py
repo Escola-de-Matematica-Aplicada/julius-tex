@@ -144,8 +144,12 @@ class _OpenAICompatProvider(BaseProvider):
 
     def list_models(self) -> list[str]:
         """Return all model IDs available from this OpenAI-compatible API."""
-        response = self._client.models.list()
-        return sorted(m.id for m in response.data)
+        try:
+            response = self._client.models.list()
+            return sorted(m.id for m in response.data)
+        except Exception as e:
+            print(f"Error listing models for {self.name}: {e}")
+            return []
 
     def stream_chat(
         self,

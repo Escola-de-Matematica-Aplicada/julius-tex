@@ -179,58 +179,41 @@ class TestParseModelsFromMd:
 
 
 class TestLMStudioProviderListModels:
-    """LMStudioProvider.list_models() should use the bundled lmstudio_julio.md."""
+    """LMStudioProvider.list_models() should call the LM Studio API."""
 
-    def _build_lmstudio_provider(self):
+    def test_returns_models_from_api(self) -> None:
+        """list_models() returns models fetched from the API."""
         mock_openai = MagicMock()
-        from julius_tex.providers.openai_compat import LMStudioProvider
+        mock_client = MagicMock()
+        mock_openai.OpenAI.return_value = mock_client
 
-        with patch.dict(sys.modules, {"openai": mock_openai}):
-            provider = LMStudioProvider()
-        return provider
+        m1 = MagicMock()
+        m1.id = "model-1"
+        m2 = MagicMock()
+        m2.id = "model-2"
+        mock_client.models.list.return_value.data = [m1, m2]
 
-    def test_returns_models_from_md_file(self) -> None:
-        """list_models() returns the curated list from lmstudio_julio.md."""
-        mock_openai = MagicMock()
         with patch.dict(sys.modules, {"openai": mock_openai}):
             from julius_tex.providers.openai_compat import LMStudioProvider
-
             provider = LMStudioProvider()
 
         models = provider.list_models()
-        assert isinstance(models, list)
-        assert len(models) > 0
+        assert models == ["model-1", "model-2"]
+        mock_client.models.list.assert_called_once()
 
-    def test_does_not_call_live_api(self) -> None:
-        """list_models() must not make any HTTP request to the LM Studio server."""
+    def test_returns_empty_list_on_api_error(self) -> None:
+        """list_models() returns an empty list if the API call fails."""
         mock_openai = MagicMock()
+        mock_client = MagicMock()
+        mock_openai.OpenAI.return_value = mock_client
+        mock_client.models.list.side_effect = Exception("API Error")
+
         with patch.dict(sys.modules, {"openai": mock_openai}):
             from julius_tex.providers.openai_compat import LMStudioProvider
-
-            provider = LMStudioProvider()
-
-        provider.list_models()
-
-        # The OpenAI client's models.list() must NOT be called.
-        provider._client.models.list.assert_not_called()
-
-    def test_models_are_sorted(self) -> None:
-        """list_models() returns models in sorted order."""
-        mock_openai = MagicMock()
-        with patch.dict(sys.modules, {"openai": mock_openai}):
-            from julius_tex.providers.openai_compat import LMStudioProvider
-
             provider = LMStudioProvider()
 
         models = provider.list_models()
-        assert models == sorted(models)
-
-    def test_bundled_md_file_exists(self) -> None:
-        """The lmstudio_julio.md file shipped with the package actually exists."""
-        import julius_tex.providers.openai_compat as oc_mod
-
-        pkg_dir = Path(oc_mod.__file__).parent
-        assert (pkg_dir / "lmstudio_julio.md").exists()
+        assert models == []
 
 
 # ─── get_available_providers: CLAUDE_BASE_URL support ─────────────────────────

@@ -7,6 +7,11 @@ from typing import Iterator
 from .base import BaseProvider, Message
 
 _DEFAULT_MODEL = "claude-sonnet-4-6"
+_HARDCODED_MODELS = [
+    "claude-haiku-4-5-20251001",
+    "claude-sonnet-4-6",
+    "claude-opus-4-6",
+]
 _MAX_TOKENS = 16_000
 _MAX_CONTEXT_TOKENS = 200_000
 # Use the official Anthropic API URL explicitly so that environment variables
@@ -44,12 +49,20 @@ class ClaudeProvider(BaseProvider):
         self.model = model or _DEFAULT_MODEL
 
     def list_models(self) -> list[str]:
-        """Return the list of available Claude models."""
-        return [
-            "claude-haiku-4-5-20251001",
-            "claude-sonnet-4-6",
-            "claude-opus-4-6",
-        ]
+        """Return the list of available Claude models.
+
+        Calls the Anthropic API to dynamically fetch the list of available models.
+        Falls back to a hardcoded list if the API call fails.
+        """
+        try:
+            # The Anthropic SDK version >= 0.23.0 supports the Models API.
+            # models.list() returns a Page object with a .data attribute.
+            response = self._client.models.list()
+            return sorted(m.id for m in response.data)
+        except Exception as e:
+            # Fallback for old SDK versions, network issues, or API not supported.
+            print(f"Error listing Claude models: {e}")
+            return list(_HARDCODED_MODELS)
 
     def stream_chat(
         self,

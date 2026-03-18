@@ -26,7 +26,7 @@ class MinimaxProvider(BaseProvider):
     def __init__(self, api_key: str, model: str = "", base_url: str = "") -> None:
         # Store configuration and create a simple HTTP client for requests.
         self.api_key = api_key
-        self.model = model or ""
+        self.model = model or "M2-her"
         self.base_url = (base_url.rstrip("/") if base_url else _DEFAULT_BASE_URL).rstrip("/")
         self._client = httpx.Client()
 
@@ -112,8 +112,8 @@ class MinimaxProvider(BaseProvider):
             elif m.role == "assistant":
                 api_messages.append({"role": "assistant", "content": m.content, "name": "MiniMax AI"})
 
-        # Choose a model: prefer configured, otherwise pick first fallback
-        model = self.model or (self._MINIMAX_MODELS[0] if self._MINIMAX_MODELS else "M2-her")
+        # Choose a model: prefer configured, otherwise use default
+        model = self.model or "M2-her"
 
         payload = {"model": model, "messages": api_messages}
         headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
