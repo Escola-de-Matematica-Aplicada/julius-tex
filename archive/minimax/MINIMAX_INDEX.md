@@ -38,7 +38,7 @@
 - Known limitations
 
 ### **For Source Code**
-👉 View implementation: **[julius_tex/providers/minimax_provider.py](julius_tex/providers/minimax_provider.py)**
+👉 View implementation: **[julius_tex/providers/minimax_provider.py](../../julius_tex/providers/minimax_provider.py)**
 - 276 lines of production-ready code
 - 100% type hints
 - Comprehensive docstrings
@@ -235,7 +235,7 @@ export MINIMAX_BASE_URL="https://api.minimax.io/anthropic"
    → Review [MINIMAX_CHECKLIST.md](MINIMAX_CHECKLIST.md)
 
 5. **Need to see the code?**
-   → Look at [julius_tex/providers/minimax_provider.py](julius_tex/providers/minimax_provider.py)
+   → Look at [julius_tex/providers/minimax_provider.py](../../julius_tex/providers/minimax_provider.py)
 
 ---
 
