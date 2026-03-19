@@ -61,7 +61,7 @@ def _parse_models_from_md(md_path: Path, *, require_slash: bool = True) -> list[
 
 # ─── Perplexity ───────────────────────────────────────────────────────────────
 _PERPLEXITY_BASE_URL = "https://api.perplexity.ai"
-_PERPLEXITY_DEFAULT_MODEL = "llama-3.1-sonar-large-128k-online"
+_PERPLEXITY_DEFAULT_MODEL = "sonar"
 _PERPLEXITY_MAX_CONTEXT_TOKENS = 127_072
 # Perplexity does not expose a GET /models endpoint, so we maintain a static
 # list.  Update this list as Perplexity releases or retires models.
@@ -71,9 +71,6 @@ _PERPLEXITY_MODELS = [
     "sonar-reasoning",
     "sonar-pro",
     "sonar",
-    "llama-3.1-sonar-huge-128k-online",
-    "llama-3.1-sonar-large-128k-online",
-    "llama-3.1-sonar-small-128k-online",
 ]
 
 # ─── Grok (xAI) ───────────────────────────────────────────────────────────────
