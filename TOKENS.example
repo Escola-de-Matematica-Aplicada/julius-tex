@@ -20,6 +20,16 @@ ANTHROPIC_API_KEY=your_anthropic_api_key_here
 # This takes precedence over the ANTHROPIC_BASE_URL environment variable.
 # CLAUDE_BASE_URL=https://api.anthropic.com
 
+# ─── Minimax (Anthropic-compatible) ─────────────────────────────────────────
+# Minimax exposes an Anthropic-like "text-anthropic" API. See:
+# https://platform.minimax.io/docs/api-reference/text-anthropic-api
+# Example: curl https://api.minimax.io/anthropic/v1/models -H "Authorization: Bearer $MINIMAX_API_KEY"
+MINIMAX_API_KEY=your_minimax_api_key_here
+# Optional: override default model (leave empty to select later with /models)
+# MINIMAX_MODEL=
+# Optional: override the Minimax API base URL (recommended default: https://api.minimax.io/anthropic)
+# MINIMAX_BASE_URL=https://api.minimax.io/anthropic
+
 # ─── Perplexity ───────────────────────────────────────────────────────────────
 # Get your key at: https://www.perplexity.ai/settings/api
 # https://docs.perplexity.ai/docs/agent-api/models

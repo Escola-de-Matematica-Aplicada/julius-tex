@@ -25,6 +25,18 @@ def get_available_providers(tokens: dict[str, str]) -> list[BaseProvider]:
         except ImportError:
             pass
 
+    # ── Minimax ───────────────────────────────────────────────────────────
+    key = tokens.get("MINIMAX_API_KEY", "")
+    if key and not key.startswith("your_"):
+        try:
+            from .minimax_provider import MinimaxProvider  # noqa: PLC0415
+
+            model = tokens.get("MINIMAX_MODEL", "")
+            base_url = tokens.get("MINIMAX_BASE_URL", "")
+            providers.append(MinimaxProvider(key, model, base_url))
+        except ImportError:
+            pass
+
     # ── Mistral ────────────────────────────────────────────────────────────
     key = tokens.get("MISTRAL_API_KEY", "")
     if key and not key.startswith("your_"):

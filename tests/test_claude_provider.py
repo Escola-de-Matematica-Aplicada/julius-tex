@@ -21,13 +21,39 @@ def _build_provider(mock_anthropic: Any, api_key: str = "fake-key"):
 
 
 class TestClaudeProviderListModels:
-    """list_models() should return the hardcoded list of available Claude models."""
+    """list_models() should return available Claude models from the API or fallback."""
 
-    def test_returns_hardcoded_models(self) -> None:
-        """list_models() returns the fixed list of supported Claude models."""
+    def test_returns_dynamic_models(self) -> None:
+        """list_models() returns models fetched from the API."""
         mock_anthropic = MagicMock()
-        provider = _build_provider(mock_anthropic)
+        mock_client = MagicMock()
+        mock_anthropic.Anthropic.return_value = mock_client
 
+        # Mock Model objects
+        m1 = MagicMock()
+        m1.id = "claude-4-sonnet"
+        m2 = MagicMock()
+        m2.id = "claude-4-opus"
+        
+        # Mock the response object with .data attribute
+        mock_response = MagicMock()
+        mock_response.data = [m1, m2]
+        mock_client.models.list.return_value = mock_response
+
+        provider = _build_provider(mock_anthropic)
+        models = provider.list_models()
+
+        assert models == ["claude-4-opus", "claude-4-sonnet"]
+        mock_client.models.list.assert_called_once()
+
+    def test_returns_fallback_on_error(self) -> None:
+        """list_models() returns the hardcoded list if the API call fails."""
+        mock_anthropic = MagicMock()
+        mock_client = MagicMock()
+        mock_anthropic.Anthropic.return_value = mock_client
+        mock_client.models.list.side_effect = Exception("API Error")
+
+        provider = _build_provider(mock_anthropic)
         models = provider.list_models()
 
         assert models == [
@@ -36,27 +62,19 @@ class TestClaudeProviderListModels:
             "claude-opus-4-6",
         ]
 
-    def test_contains_expected_models(self) -> None:
-        """All three supported Claude models are present in the list."""
+    def test_contains_expected_models_in_fallback(self) -> None:
+        """Fallback list contains expected legacy models."""
         mock_anthropic = MagicMock()
-        provider = _build_provider(mock_anthropic)
+        mock_client = MagicMock()
+        mock_anthropic.Anthropic.return_value = mock_client
+        mock_client.models.list.side_effect = Exception("API Error")
 
+        provider = _build_provider(mock_anthropic)
         models = provider.list_models()
 
         assert "claude-haiku-4-5-20251001" in models
         assert "claude-sonnet-4-6" in models
         assert "claude-opus-4-6" in models
-
-    def test_no_api_call_made(self) -> None:
-        """list_models() does not make any API calls."""
-        mock_anthropic = MagicMock()
-        mock_client = MagicMock()
-        mock_anthropic.Anthropic.return_value = mock_client
-
-        provider = _build_provider(mock_anthropic)
-        provider.list_models()
-
-        mock_client.models.list.assert_not_called()
 
     def test_default_model_is_sonnet_4_6(self) -> None:
         """The default model is claude-sonnet-4-6."""
