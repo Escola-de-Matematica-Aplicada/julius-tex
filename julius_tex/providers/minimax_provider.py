@@ -1,34 +1,40 @@
-"""Minimax provider using native API.
+"""Minimax provider using Anthropic-compatible API.
 
-This provider implements Minimax's /v1/text/chatcompletion_v2 API with proper
-message formatting including the 'name' field for each role.
+This provider implements Minimax's Anthropic-compatible API using the 'anthropic' SDK,
+supporting features like thinking blocks and streaming responses.
 """
 from __future__ import annotations
 
 from typing import Iterator
 
-import httpx
+import anthropic
 
 from .base import BaseProvider, Message
 
-_DEFAULT_BASE_URL = "https://api.minimax.io"
+_DEFAULT_BASE_URL = "https://api.minimax.io/anthropic"
+_DEFAULT_MODEL = "MiniMax-M2.7"
+_MAX_TOKENS = 16_000
 
 
 class MinimaxProvider(BaseProvider):
-    """Provider for Minimax using native /v1/text/chatcompletion_v2 API.
+    """Provider for Minimax using the Anthropic-compatible API.
 
-    Implements non-streaming chat completion with proper message formatting.
+    Uses the 'anthropic' SDK with Minimax's custom base URL.
+    Supports both streaming text and thinking blocks.
     """
 
     name = "Minimax"
     max_context_tokens = None
 
     def __init__(self, api_key: str, model: str = "", base_url: str = "") -> None:
-        # Store configuration and create a simple HTTP client for requests.
+        # Store configuration and initialize the Anthropic client with Minimax base URL.
         self.api_key = api_key
-        self.model = model or "M2-her"
+        self.model = model or _DEFAULT_MODEL
         self.base_url = (base_url.rstrip("/") if base_url else _DEFAULT_BASE_URL).rstrip("/")
-        self._client = httpx.Client()
+        self._client = anthropic.Anthropic(
+            api_key=self.api_key,
+            base_url=self.base_url,
+        )
 
     _MINIMAX_MODELS = [
         "M2-her",
@@ -42,121 +48,101 @@ class MinimaxProvider(BaseProvider):
     def list_models(self) -> list[str]:
         """Return a list of available models from the Minimax API.
 
-        Minimax's hosted endpoint may not support the OpenAI/Anthropic-style
-        /v1/models endpoint; therefore attempt a request but fall back to a
-        curated static list for reliable user experience.
+        Attempts to fetch the model list via the Anthropic-style models endpoint,
+        falling back to the standard Minimax models API or a static list.
         """
         try:
-            url = f"{self.base_url}/v1/models"
-            headers = {"Authorization": f"Bearer {self.api_key}"}
-            resp = self._client.get(url, headers=headers, timeout=10.0)
-            if resp.status_code != 200:
-                # Known case: some Minimax deployments return 404 for /v1/models.
-                # Fall back to static model list.
-                return list(self._MINIMAX_MODELS)
-            data = resp.json()
-
-            models: list[str] = []
-            # Parse common shapes if present
-            if isinstance(data, dict):
-                if "data" in data and isinstance(data["data"], list):
-                    for m in data["data"]:
-                        if isinstance(m, dict):
-                            name = m.get("id") or m.get("model") or m.get("name")
-                            if name:
-                                models.append(name)
-                elif "models" in data and isinstance(data["models"], list):
-                    for m in data["models"]:
-                        if isinstance(m, dict):
-                            name = m.get("id") or m.get("model") or m.get("name")
-                            if name:
-                                models.append(name)
-                        elif isinstance(m, str):
-                            models.append(m)
-            elif isinstance(data, list):
-                for m in data:
-                    if isinstance(m, dict):
-                        name = m.get("id") or m.get("model") or m.get("name")
-                        if name:
-                            models.append(name)
-                    elif isinstance(m, str):
-                        models.append(m)
-
+            # Try dynamic model discovery via the Anthropic SDK
+            response = self._client.models.list()
+            models = [m.id for m in response.data]
             if models:
-                return sorted({m for m in models if m})
-            # No usable models discovered; return fallback list.
-            return list(self._MINIMAX_MODELS)
+                return sorted(set(models))
         except Exception as exc:  # noqa: BLE001
-            print(f"Error listing Minimax models: {exc}")
-            return list(self._MINIMAX_MODELS)
+            # Anthropic-compatible /v1/models might return 404 on Minimax.
+            # Avoid printing huge HTML error bodies from Minimax.
+            err_msg = str(exc)
+            if "404" not in err_msg and "<html>" not in err_msg.lower():
+                print(f"Error listing Minimax models via Anthropic SDK: {exc}")
+
+        # Fallback: try the standard Minimax models endpoint
+        try:
+            import httpx  # noqa: PLC0415
+            # Minimax root URL for standard API; normally https://api.minimax.io
+            root_url = self.base_url.replace("/anthropic", "").rstrip("/")
+            resp = httpx.get(
+                f"{root_url}/v1/models",
+                headers={"Authorization": f"Bearer {self.api_key}"},
+                timeout=5.0,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                models = []
+                if isinstance(data, dict):
+                    # Check for "data" (OpenAI-style) or "models"
+                    for key in ("data", "models"):
+                        items = data.get(key)
+                        if isinstance(items, list):
+                            for item in items:
+                                if isinstance(item, dict):
+                                    name = (
+                                        item.get("id")
+                                        or item.get("model")
+                                        or item.get("name")
+                                    )
+                                    if name:
+                                        models.append(name)
+                                elif isinstance(item, str):
+                                    models.append(item)
+                if models:
+                    return sorted(set(models))
+        except Exception:  # noqa: BLE001
+            pass
+
+        return list(self._MINIMAX_MODELS)
 
     def stream_chat(self, messages: list[Message], system: str = "") -> Iterator[str]:
-        """Stream assistant text from Minimax using the /v1/text/chatcompletion_v2 API.
+        """Stream assistant text from Minimax using the Anthropic SDK.
 
-        The implementation uses Minimax's native API format with proper message structure
-        including the 'name' field for each message role.
+        Supports thinking blocks and text content from the Anthropic response format.
         """
-        import json
+        # Convert project Message objects to Anthropic's expected dict format
+        api_messages = [
+            {"role": m.role, "content": m.content}
+            for m in messages
+            if m.role in ("user", "assistant")
+        ]
 
-        # Build conversation with Minimax's expected format
-        api_messages = []
-
-        # Add system message if present
+        kwargs: dict = {
+            "model": self.model,
+            "max_tokens": _MAX_TOKENS,
+            "messages": api_messages,
+        }
         if system:
-            api_messages.append({"role": "system", "content": system, "name": "MiniMax AI"})
-
-        # Add user/assistant turns with name field
-        for m in messages:
-            if m.role == "user":
-                api_messages.append({"role": "user", "content": m.content, "name": "User"})
-            elif m.role == "assistant":
-                api_messages.append({"role": "assistant", "content": m.content, "name": "MiniMax AI"})
-
-        # Choose a model: prefer configured, otherwise use default
-        model = self.model or "M2-her"
-
-        payload = {"model": model, "messages": api_messages}
-        headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
-
-        # Use Minimax's native API endpoint
-        endpoint = f"{self.base_url}/v1/text/chatcompletion_v2"
+            kwargs["system"] = system
 
         try:
-            # Make non-streaming request to Minimax API
-            resp = self._client.post(endpoint, headers=headers, json=payload, timeout=60.0)
-
-            if resp.status_code >= 400:
-                error_text = resp.text
-                raise RuntimeError(f"Minimax API error (status {resp.status_code}): {error_text}")
-
-            # Parse response
-            data = resp.json()
-
-            # Extract text from Minimax response format
-            text_content = None
-            if isinstance(data, dict):
-                # Try common response shapes
-                choices = data.get("choices")
-                if isinstance(choices, list) and choices:
-                    for choice in choices:
-                        if isinstance(choice, dict):
-                            message = choice.get("message")
-                            if isinstance(message, dict):
-                                text_content = message.get("content")
-                                if text_content:
-                                    break
-                            # Alternative shapes
-                            text_content = text_content or choice.get("text") or choice.get("content")
-                            if text_content:
-                                break
-
-                # Direct content field
-                text_content = text_content or data.get("content") or data.get("text")
-
-            if text_content:
-                yield text_content
-            else:
-                raise RuntimeError(f"Could not extract text from Minimax response: {data}")
+            # Use streaming if supported by the compatible endpoint
+            with self._client.messages.stream(**kwargs) as stream:
+                for event in stream:
+                    # Handle text deltas
+                    if event.type == "content_block_delta" and event.delta.type == "text_delta":
+                        yield event.delta.text
+                    # Handle thinking block deltas (if the SDK/Minimax supports it in streaming)
+                    elif event.type == "content_block_delta" and event.delta.type == "thinking_delta":
+                        # Optionally format thinking blocks if desired; here we just yield the content
+                        yield f"\n[Thinking: {event.delta.thinking}]\n"
 
         except Exception as exc:
-            raise RuntimeError(f"Failed to communicate with Minimax API: {exc}") from exc
+            # Fallback to non-streaming if stream fails or is not supported
+            try:
+                message = self._client.messages.create(**kwargs)
+                for block in message.content:
+                    if block.type == "thinking":
+                        yield f"\n[Thinking: {block.thinking}]\n"
+                    elif block.type == "text":
+                        yield block.text
+            except Exception as nested_exc:
+                err_msg = str(nested_exc)
+                if "<html>" in err_msg.lower():
+                    err_msg = "Received an unexpected HTML error response from Minimax API."
+                raise RuntimeError(f"Failed to communicate with Minimax API: {err_msg}") from exc
