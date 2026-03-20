@@ -28,8 +28,8 @@ You need python, pip and venv.
 # 1 – Clone and install
 git clone https://github.com/Escola-de-Matematica-Aplicada/julius-tex.git
 cd julius-tex
-python3 -m venv .venv
-source .venv/bin/activate
+python3.14 -m venv .venv3.14
+source .venv3.14/bin/activate
 pip install -e .
 
 # 2 – Configure tokens
