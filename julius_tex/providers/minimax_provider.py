@@ -13,7 +13,15 @@ from .base import BaseProvider, Message
 
 _DEFAULT_BASE_URL = "https://api.minimax.io/anthropic"
 _DEFAULT_MODEL = "MiniMax-M2.7"
-_MAX_TOKENS = 16_000
+# Max tokens varies by model; M2-her has a strict 2048 limit
+_MAX_TOKENS_MAP = {
+    "M2-her": 2048,
+    "MiniMax-M2.5": 8192,
+    "MiniMax-M2.5-highspeed": 8192,
+    "MiniMax-M2.7": 8192,
+    "MiniMax-M2.7-highspeed": 8192,
+    "MiniMax-M2": 8192,
+}
 
 
 class MinimaxProvider(BaseProvider):
@@ -112,9 +120,12 @@ class MinimaxProvider(BaseProvider):
             if m.role in ("user", "assistant")
         ]
 
+        # Use model-specific max_tokens; default to 8192 for unknown models
+        max_tokens = _MAX_TOKENS_MAP.get(self.model, 8192)
+
         kwargs: dict = {
             "model": self.model,
-            "max_tokens": _MAX_TOKENS,
+            "max_tokens": max_tokens,
             "messages": api_messages,
         }
         if system:
