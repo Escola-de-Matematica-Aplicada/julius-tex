@@ -2,7 +2,7 @@
 
 > Interactive AI research assistant and LaTeX editor — right in your terminal.
 
-Julius Tex reads your project's text files (`.tex`, `.bst`, `.cls`, `.bib`, `.md`),
+Julius Tex reads your project's text files (`.tex`, `.bst`, `.cls`, `.bib`, `.md`, `.txt`, `.html`, `.xml`, `.json`, etc.),
 a custom system prompt, and your API tokens, then starts an intelligent conversation
 about your work.  Every question-and-answer pair is automatically saved as a
 timestamped Markdown file and re-loaded the next time you run the tool, so the
@@ -13,7 +13,7 @@ assistant always has full context of previous sessions.
 ## Features
 
 - 🤖 **Multiple AI providers** — Claude, Mistral, Perplexity, Grok, LM Studio, Ollama, GitHub Models, Azure AI Foundry, Alibaba Cloud, Zhipu AI (z.ai)
-- 📄 **Automatic context loading** — reads all `.tex`, `.bst`, `.cls`, `.bib`, and `.md` files in the current directory and its sub-directories
+- 📄 **Automatic context loading** — reads all text files (`.tex`, `.md`, `.txt`, `.html`, `.xml`, etc.) in the current directory and its sub-directories
 - 🧠 **Custom system prompt** — place a `PROMPT.sys` file in your project root
 - 💾 **Persistent history** — each exchange is saved as `julius_YYYYMMDD_HHMMSS.md`
 - ✨ **Beautiful TUI** — syntax-highlighted, streaming responses powered by [Rich](https://github.com/Textualize/rich)
@@ -31,6 +31,7 @@ cd julius-tex
 python3.14 -m venv .venv3.14
 source .venv3.14/bin/activate
 pip install -e .
+pip install -r requirements.txt
 
 # 2 – Configure tokens
 cp TOKENS.example TOKENS
@@ -54,7 +55,7 @@ julius-tex
 ```
 
 Julius Tex will:
-1. Read all `.tex`, `.bst`, `.cls`, `.bib`, and `.md` files in the current directory and its sub-directories as project context.
+1. Read all supported text files (`.tex`, `.md`, `.txt`, `.html`, `.xml`, etc.) in the current directory and its sub-directories as project context.
 2. Read `PROMPT.sys` as the session system prompt (if present).
 3. Read `TOKENS` for API keys (if present).
 4. Start an interactive chat session.
@@ -118,6 +119,7 @@ See `PROMPT.sys.example` for a starting template.
 | Azure AI Foundry | `AZURE_AI_FOUNDRY_API_KEY` + `AZURE_AI_FOUNDRY_ENDPOINT` | Default model: `gpt-4o` — [docs](https://ai.azure.com/) |
 | Alibaba Cloud | `DASHSCOPE_API_KEY` | Default model: `qwen-max` — [docs](https://bailian.console.alibabacloud.com/) |
 | Zhipu AI (z.ai) | `ZHIPU_API_KEY` | Default model: `glm-4` — [docs](https://open.bigmodel.cn/) |
+| Google Gemini | `GEMINI_API_KEY` | Default model: `gemini-2.5-flash` — [docs](https://aistudio.google.com/) |
 
 ---
 

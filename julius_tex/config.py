@@ -47,7 +47,11 @@ def load_system_prompt(directory: Path) -> str:
 
 # Supported plain-text file extensions for context loading.
 TEXT_FILE_EXTENSIONS: frozenset[str] = frozenset(
-    {".md", ".tex", ".bst", ".cls", ".bib"}
+    {
+        ".md", ".tex", ".bst", ".cls", ".bib", ".txt",
+        ".html", ".htm", ".xml", ".json", ".yaml", ".yml", ".csv",
+        ".py", ".js", ".ts", ".c", ".cpp", ".h", ".java", ".sh", ".sql"
+    }
 )
 
 # Pattern that matches the header we write when saving sessions so we can
@@ -62,7 +66,7 @@ def load_text_files(directory: Path) -> list[tuple[str, str]]:
     plain-text file found in *directory* and its sub-directories, sorted by
     relative path.
 
-    Supported extensions: ``.md``, ``.tex``, ``.bst``, ``.cls``, ``.bib``.
+    Supported extensions: ``.md``, ``.tex``, ``.bst``, ``.cls``, ``.bib``, ``.txt``, ``.html``, etc.
     Files inside hidden directories (names starting with ``.``) are skipped.
     """
     results: list[tuple[str, str]] = []
