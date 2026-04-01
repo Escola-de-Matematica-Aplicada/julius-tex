@@ -179,6 +179,20 @@ def get_available_providers(tokens: dict[str, str]) -> list[BaseProvider]:
         except ImportError:
             pass
 
+    # ── Google Gemini ────────────────────────────────────────────────────────
+    key = tokens.get("GEMINI_API_KEY", "")
+    if key and not key.startswith("your_"):
+        try:
+            from .google_provider import GoogleProvider  # noqa: PLC0415
+
+            model = tokens.get("GEMINI_MODEL", "")
+            base_url = tokens.get("GEMINI_BASE_URL", "")
+            providers.append(
+                GoogleProvider(key, model, base_url)
+            )
+        except ImportError:
+            pass
+
     return providers
 
 
